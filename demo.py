@@ -4,6 +4,9 @@ import RPi.GPIO as GPIO
 import os
 import time
 import pytesseract
+from lcd import *
+
+lcd_init()
 
 os.environ['DISPLAY'] = ':0'
 
@@ -12,9 +15,12 @@ limit = 99
 
 GPIO.setmode(GPIO.BCM)
 GPIO.setup(13,GPIO.OUT)
+GPIO.setup(14,GPIO.OUT)
 GPIO.setup(19,GPIO.OUT)
 GPIO.setup(17,GPIO.IN, pull_up_down=GPIO.PUD_UP)
 GPIO.setup(27,GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+GPIO.output(14,GPIO.HIGH)
 
 
 def inc_speed(arg):
@@ -39,7 +45,14 @@ limitCascade = cv2.CascadeClassifier(limitCascPath)
 video_capture = cv2.VideoCapture(0)
 
 while True:
-    print("speed: ", speed, " | limit: ", limit)
+    speedText = "Speed: " + str(speed);
+    limitText = "Limit: " + str(limit);
+    
+    lcd_byte(LCD_LINE_1, LCD_CMD)
+    lcd_string(speedText, 2)
+    lcd_byte(LCD_LINE_2, LCD_CMD)
+    lcd_string(limitText, 2)
+    
     # Capture frame-by-frame
     GPIO.output(13,GPIO.LOW)
     GPIO.output(19, GPIO.LOW)
