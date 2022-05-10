@@ -6,8 +6,6 @@ import time
 import pytesseract
 from lcd import *
 
-lcd_init()
-
 os.environ['DISPLAY'] = ':0'
 
 speed = 40
@@ -22,6 +20,7 @@ GPIO.setup(27,GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
 GPIO.output(14,GPIO.HIGH)
 
+lcd_init()
 
 def inc_speed(arg):
     global speed
@@ -113,5 +112,6 @@ while True:
 video_capture.release()
 GPIO.output(13,GPIO.LOW)
 GPIO.output(19,GPIO.LOW)
+GPIO.output(14,GPIO.LOW)
 GPIO.cleanup()
 cv2.destroyAllWindows()
