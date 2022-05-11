@@ -32,13 +32,12 @@ import RPi.GPIO as GPIO
 import time
 
 # Define GPIO to LCD mapping
-LCD_RS = 26
-LCD_E  = 20
-LCD_D4 = 16
-LCD_D5 = 6
-LCD_D6 = 5
-LCD_D7 = 11
-LED_ON = 15
+LCD_RS = 37
+LCD_E  = 38
+LCD_D4 = 36
+LCD_D5 = 31
+LCD_D6 = 29
+LCD_D7 = 23
 
 # Define some device constants
 LCD_WIDTH = 16    # Maximum characters per line
@@ -53,14 +52,13 @@ E_PULSE = 0.00005
 E_DELAY = 0.00005
 
 def lcd_init():
-  GPIO.setmode(GPIO.BCM)       # Use BCM GPIO numbers
+  GPIO.setmode(GPIO.BOARD)       # Use BCM GPIO numbers
   GPIO.setup(LCD_E, GPIO.OUT)  # E
   GPIO.setup(LCD_RS, GPIO.OUT) # RS
   GPIO.setup(LCD_D4, GPIO.OUT) # DB4
   GPIO.setup(LCD_D5, GPIO.OUT) # DB5
   GPIO.setup(LCD_D6, GPIO.OUT) # DB6
   GPIO.setup(LCD_D7, GPIO.OUT) # DB7
-  GPIO.setup(LED_ON, GPIO.OUT) # Backlight enable  
   # Initialise display
   lcd_byte(0x33,LCD_CMD)
   lcd_byte(0x32,LCD_CMD)

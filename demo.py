@@ -11,16 +11,35 @@ os.environ['DISPLAY'] = ':0'
 speed = 40
 limit = 99
 
-GPIO.setmode(GPIO.BCM)
-GPIO.setup(13,GPIO.OUT)
-GPIO.setup(14,GPIO.OUT)
-GPIO.setup(19,GPIO.OUT)
-GPIO.setup(17,GPIO.IN, pull_up_down=GPIO.PUD_UP)
-GPIO.setup(27,GPIO.IN, pull_up_down=GPIO.PUD_UP)
 
-GPIO.output(14,GPIO.HIGH)
+GPIO.setmode(GPIO.BOARD)
+GPIO.setup(10,GPIO.OUT)
+GPIO.setup(12,GPIO.OUT)
+GPIO.setup(16,GPIO.OUT)
+
+pwmR = GPIO.PWM(10, 2000)  # set each PWM pin to 2 KHz
+pwmG = GPIO.PWM(12, 2000)
+pwmB = GPIO.PWM(16, 2000)
+
+pwmR.start(0)
+pwmG.start(0)
+pwmB.start(0)
+
+GPIO.setup(33,GPIO.OUT)
+GPIO.setup(8,GPIO.OUT)
+GPIO.setup(35,GPIO.OUT)
+
+GPIO.setup(11,GPIO.IN, pull_up_down=GPIO.PUD_UP)
+GPIO.setup(13,GPIO.IN, pull_up_down=GPIO.PUD_UP)
+
+GPIO.output(8,GPIO.HIGH)
 
 lcd_init()
+
+def setColor(r, g, b):  # 0 ~ 100 values since 0 ~ 100 only for duty cycle
+    pwmR.ChangeDutyCycle(r)
+    pwmG.ChangeDutyCycle(g)
+    pwmB.ChangeDutyCycle(b)
 
 def inc_speed(arg):
     global speed
@@ -32,8 +51,8 @@ def dec_speed(arg):
     if speed >=5:
         speed-=5
         
-GPIO.add_event_detect(17, GPIO.FALLING, callback=dec_speed, bouncetime=500)
-GPIO.add_event_detect(27, GPIO.FALLING, callback=inc_speed, bouncetime=500)
+GPIO.add_event_detect(11, GPIO.FALLING, callback=dec_speed, bouncetime=500)
+GPIO.add_event_detect(13, GPIO.FALLING, callback=inc_speed, bouncetime=500)
 
 stopCascPath = sys.argv[1]
 stopCascade = cv2.CascadeClassifier(stopCascPath)
@@ -53,19 +72,15 @@ while True:
     lcd_string(limitText, 2)
     
     # Capture frame-by-frame
-    GPIO.output(13,GPIO.LOW)
-    GPIO.output(19, GPIO.LOW)
+    GPIO.output(33,GPIO.LOW)
+    GPIO.output(35, GPIO.LOW)
     
-    if(speed > limit):
-        GPIO.output(19, GPIO.HIGH)
-        time.sleep(0.05)
-        GPIO.output(19, GPIO.LOW)
-        
-        time.sleep(0.1)
-        
-        GPIO.output(19, GPIO.HIGH)
-        time.sleep(0.05)
-        GPIO.output(19, GPIO.LOW)
+    if speed >= limit+10:
+        setColor(100, 0, 0)
+    elif speed >= limit:
+        setColor(0, 0, 100)
+    else:
+        setColor(0, 100, 0)
 
     ret, original_frame = video_capture.read()
     frame = cv2.rotate(original_frame, cv2.ROTATE_180)
@@ -88,7 +103,7 @@ while True:
 
     for (x, y, w, h) in stops:
         # cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
-        GPIO.output(13,GPIO.HIGH)
+        GPIO.output(33,GPIO.HIGH)
     
     for (x, y, w, h) in limits:
         # cv2.rectangle(gray, (x+int(w/8), y+int(h/2)), (x+int(7*w/8), y+h), (0, 255, 0), 2)
@@ -110,8 +125,8 @@ while True:
         break
 
 video_capture.release()
-GPIO.output(13,GPIO.LOW)
-GPIO.output(19,GPIO.LOW)
-GPIO.output(14,GPIO.LOW)
+GPIO.output(33,GPIO.LOW)
+GPIO.output(35,GPIO.LOW)
+GPIO.output(8,GPIO.LOW)
 GPIO.cleanup()
 cv2.destroyAllWindows()
