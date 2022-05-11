@@ -60,6 +60,9 @@ stopCascade = cv2.CascadeClassifier(stopCascPath)
 limitCascPath = sys.argv[2]
 limitCascade = cv2.CascadeClassifier(limitCascPath)
 
+yieldCascPath = sys.argv[3]
+yieldCascade = cv2.CascadeClassifier(yieldCascPath)
+
 video_capture = cv2.VideoCapture(0)
 
 while True:
@@ -100,10 +103,21 @@ while True:
         minNeighbors=5,
         minSize=(30, 30),
     )
+    
+    yields = yieldCascade.detectMultiScale(
+        gray,
+        scaleFactor=1.1,
+        minNeighbors=5,
+        minSize=(30, 30),
+    )
 
     for (x, y, w, h) in stops:
         # cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
         GPIO.output(33,GPIO.HIGH)
+    
+    for (x, y, w, h) in yields:
+        # cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
+        GPIO.output(35,GPIO.HIGH)
     
     for (x, y, w, h) in limits:
         # cv2.rectangle(gray, (x+int(w/8), y+int(h/2)), (x+int(7*w/8), y+h), (0, 255, 0), 2)
