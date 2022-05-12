@@ -6,18 +6,15 @@ import time
 import pytesseract
 from lcd import *
 
-os.environ['DISPLAY'] = ':0'
-
 speed = 40
 limit = 99
-
 
 GPIO.setmode(GPIO.BOARD)
 GPIO.setup(10,GPIO.OUT)
 GPIO.setup(12,GPIO.OUT)
 GPIO.setup(16,GPIO.OUT)
 
-pwmR = GPIO.PWM(10, 2000)  # set each PWM pin to 2 KHz
+pwmR = GPIO.PWM(10, 2000)
 pwmG = GPIO.PWM(12, 2000)
 pwmB = GPIO.PWM(16, 2000)
 
@@ -36,7 +33,7 @@ GPIO.output(8,GPIO.HIGH)
 
 lcd_init()
 
-def setColor(r, g, b):  # 0 ~ 100 values since 0 ~ 100 only for duty cycle
+def setColor(r, g, b):
     pwmR.ChangeDutyCycle(r)
     pwmG.ChangeDutyCycle(g)
     pwmB.ChangeDutyCycle(b)
@@ -66,6 +63,9 @@ yieldCascade = cv2.CascadeClassifier(yieldCascPath)
 video_capture = cv2.VideoCapture(0)
 
 while True:
+    isStops = False
+    isYields = False
+    
     speedText = "Speed: " + str(speed);
     limitText = "Limit: " + str(limit);
     
@@ -73,10 +73,6 @@ while True:
     lcd_string(speedText, 2)
     lcd_byte(LCD_LINE_2, LCD_CMD)
     lcd_string(limitText, 2)
-    
-    # Capture frame-by-frame
-    GPIO.output(33,GPIO.LOW)
-    GPIO.output(35, GPIO.LOW)
     
     if speed >= limit+10:
         setColor(100, 0, 0)
@@ -112,19 +108,29 @@ while True:
     )
 
     for (x, y, w, h) in stops:
-        # cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
+        isStops = True
         GPIO.output(33,GPIO.HIGH)
     
     for (x, y, w, h) in yields:
-        # cv2.rectangle(frame, (x, y), (x+w, y+h), (0, 0, 255), 2)
+        isYields = True
         GPIO.output(35,GPIO.HIGH)
+        
+    
+    if isStops:
+        GPIO.output(33,GPIO.HIGH)
+    else:
+        GPIO.output(33,GPIO.LOW)
+        
+    if isYields:
+        GPIO.output(35,GPIO.HIGH)
+    else:
+        GPIO.output(35,GPIO.LOW)
+        
     
     for (x, y, w, h) in limits:
-        # cv2.rectangle(gray, (x+int(w/8), y+int(h/2)), (x+int(7*w/8), y+h), (0, 255, 0), 2)
+
         crop_img = gray[y+int(h/2):y+h, x+int(w/8):x+int(7*w/8)]
-        # cv2.imshow('image', crop_img)
         text = pytesseract.image_to_string(crop_img, config='-l eng --oem 3 --psm 12')
-        # print(text)
         numeric_filter = filter(str.isdigit, text)
         obs_limit = "".join(numeric_filter)
         
@@ -132,7 +138,6 @@ while True:
             limit = int(obs_limit)
             break
 
-    # cv2.imshow('Video', gray)
     time.sleep(0.01)
 
     if cv2.waitKey(1) & 0xFF == ord('q'):
@@ -143,4 +148,3 @@ GPIO.output(33,GPIO.LOW)
 GPIO.output(35,GPIO.LOW)
 GPIO.output(8,GPIO.LOW)
 GPIO.cleanup()
-cv2.destroyAllWindows()
